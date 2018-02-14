@@ -1,0 +1,111 @@
+#!/bin/bash
+SOURCE="$0"
+source /usr/lib/elive-tools/functions
+el_make_environment
+. gettext.sh
+TEXTDOMAIN="elive-news"
+export TEXTDOMAIN
+
+# Lock system (good one) {{{
+lockfile="/tmp/.$(basename $0)-${USER}.lock"
+
+exit_ok(){
+    rm -f "$lockfile"
+}
+exit_error(){
+    rm -f "$lockfile"
+}
+
+if [[ -r "$lockfile" ]] ; then
+    PROCCESS="$(cat $lockfile)"
+else
+    PROCCESS=" "
+fi
+if (ps up $PROCCESS) 1>/dev/null 2>&1 ; then
+    el_error "$(basename $0) already running"
+    exit
+else
+    echo $$ > "$lockfile"
+fi
+
+# traps needs to be after the lock verification, in order to not remove it when we are already running
+trap "exit_ok" EXIT
+trap "exit_error" 1 3 5 6 14 15 ERR TERM
+
+# SET the lock file
+echo "$$" > "$lockfile"
+
+
+# end lock system }}}
+
+main(){
+    # pre {{{
+    local feed line title link category menu_news conf
+
+    feed="http://feeds.feedburner.com/elivecd/IQfT"
+    #feed="http://www.elivecd.org/news/feed/"
+    news_history="$HOME/.config/$(basename $0)/news-history.txt"
+    if ! [[ -e "$news_history" ]] ; then
+        mkdir -p "$( dirname "$news_history" )"
+    fi
+    #curl "$feed" > "/tmp/feed.xml" # tests/debug
+
+    # }}}
+
+    while read -ru 3 line
+    do
+        # title:  <title>Elive 2.9.26 beta released</title>
+        if [[ "$line" = *"<title>"*"</title>"* ]] ; then
+            line="${line#*<title>}"
+            line="${line%</title>*}"
+            # skip invalid ones
+            if [[ "$line" = "News"*"Elive Linux" ]] ; then
+                continue
+            fi
+            title="$line"
+        fi
+
+        #link:  <link>http://feedproxy.google.com/~r/elivecd/IQfT/~3/pUtohK1YFC8/</link>   # this will redirect and should be the correct link
+        if [[ "$line" = *"<link>http"*"</link>"* ]] ; then
+            line="http${line#*>http}"
+            line="${line%</link>*}"
+            link="$line"
+        fi
+
+        # category:  <category><![CDATA[Beta]]></category>
+        if [[ "$line" = *"<category>"*"CDATA"*"</category>"* ]] ; then
+            line="${line#*CDATA[}"
+            line="${line%]]>*}"
+            category="$line $category"
+        fi
+
+        if [[ "$line" = *"</item>" ]] ; then
+            if ! grep -qs "^${title}::${link}::" "$news_history" ; then
+                echo "${title}::${link}::${category}" >> "$news_history"
+                el_array_member_add "${category}: ${title}!web-launcher '${link}'!star|" "${menu_news_entry_a[@]}" ; menu_news_entry_a=("${_out[@]}")
+            fi
+            #echo "$title"
+            #echo "$link"
+            #echo "$category"
+            unset title link category
+        fi
+
+    done 3<<< "$( curl -L -s --user-agent "Mozilla/5.0" "$feed")"
+    #done 3<<< "$( cat "/tmp/feed.xml")" # test/debug
+
+    menu_news="$( echo "${menu_news_entry_a[@]}" | sed -e 's;| ;|;g' )"
+    read -r menu_news <<< "$menu_news"
+
+    #if yad --notification --command="ls" --menu="${menu_news_entry_a[@]}Exit!quit!cancel" --image=news-icon ; then
+    if [[ -n "$menu_news" ]] ; then
+        yad --notification --command="web-launcher 'http://www.elivecd.org/news'" --menu="${menu_news}Exit!quit!cancel" --image=news-icon
+    fi
+
+}
+
+#
+#  MAIN
+#
+main "$@"
+
+# vim: set foldmethod=marker :
