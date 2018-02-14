@@ -2,9 +2,9 @@
 SOURCE="$0"
 source /usr/lib/elive-tools/functions
 el_make_environment
-. gettext.sh
-TEXTDOMAIN="elive-news"
-export TEXTDOMAIN
+#. gettext.sh
+#TEXTDOMAIN="elive-news"
+#export TEXTDOMAIN
 
 # Lock system (good one) {{{
 lockfile="/tmp/.$(basename $0)-${USER}.lock"
