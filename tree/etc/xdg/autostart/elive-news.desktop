@@ -1,0 +1,9 @@
+[Desktop Entry]
+Name=Elive News
+Comment=Shows unobtrusively last Elive news
+Icon=logo-elive
+Exec=elive-news
+Terminal=false
+Type=Application
+NoDisplay=true
+X-GNOME-Autostart-enabled=true
