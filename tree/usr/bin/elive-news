@@ -50,7 +50,7 @@ main(){
 
     feed="http://feeds.feedburner.com/elivecd/IQfT"
     #feed="http://www.elivecd.org/news/feed/"
-    news_history="$HOME/.config/$(basename $0)/news-history.txt"
+    news_history="$HOME/.cache/$(basename $0)/news-history.txt"
     if ! [[ -e "$news_history" ]] ; then
         mkdir -p "$( dirname "$news_history" )"
     fi
