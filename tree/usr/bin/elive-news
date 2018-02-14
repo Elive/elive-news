@@ -2,9 +2,9 @@
 SOURCE="$0"
 source /usr/lib/elive-tools/functions
 el_make_environment
-#. gettext.sh
-#TEXTDOMAIN="elive-news"
-#export TEXTDOMAIN
+. gettext.sh
+TEXTDOMAIN="elive-news"
+export TEXTDOMAIN
 
 # Lock system (good one) {{{
 lockfile="/tmp/.$(basename $0)-${USER}.lock"
@@ -130,7 +130,13 @@ main(){
 
     #if yad --notification --command="ls" --menu="${menu_news_entry_a[@]}Exit!quit!cancel" --image=news-icon ; then
     if [[ -n "$menu_news" ]] ; then
-        if yad --notification --command="web-launcher 'http://www.elivecd.org/news'" --menu="${menu_news}Exit!quit!cancel" --image=text-x-news ; then
+        local message_exit message_check_news
+        message_exit="$( printf "$( eval_gettext "Exit" )" "" )"
+        message_check_news="$( printf "$( eval_gettext "Check the news in your trayer corner. Right click on it to exit." )" "" )"
+
+        notify-send -t 24000 -i text-x-news "Elive News" "$message_check_news"
+
+        if yad --notification --command="web-launcher 'http://www.elivecd.org/news'" --menu="${menu_news}${message_exit}!quit!cancel" --image=text-x-news ; then
             # write the conf only if the user has clicked to Exit, otherwise will appear again in the next session
             for line in "${news_entries_a[@]}"
             do
