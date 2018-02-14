@@ -8,6 +8,7 @@ export TEXTDOMAIN
 
 # Lock system (good one) {{{
 lockfile="/tmp/.$(basename $0)-${USER}.lock"
+#set -x
 
 exit_ok(){
     rm -f "$lockfile"
@@ -55,6 +56,12 @@ main(){
     fi
     #curl "$feed" > "/tmp/feed.xml" # tests/debug
 
+    # do not run in the same user's session: update: not tested - no needed, if this is run only when destkop starts, which is more or less the same
+    #if el_flag check "elive-news" ; then
+        #exit
+    #fi
+    #el_flag add "elive-news"
+
     # }}}
 
     for arg in "$@"
@@ -82,6 +89,7 @@ main(){
             if [[ "$line" = "News"*"Elive Linux" ]] ; then
                 continue
             fi
+            #el_debug "title: $title"
             title="$line"
         fi
 
@@ -89,6 +97,7 @@ main(){
         if [[ "$line" = *"<link>http"*"</link>"* ]] ; then
             line="http${line#*>http}"
             line="${line%</link>*}"
+            #el_debug "link: $link"
             link="$line"
         fi
 
@@ -96,13 +105,16 @@ main(){
         if [[ "$line" = *"<category>"*"CDATA"*"</category>"* ]] ; then
             line="${line#*CDATA[}"
             line="${line%]]>*}"
+            #el_debug "category: $category"
             category="$line $category"
         fi
 
-        if [[ "$line" = *"</item>" ]] ; then
+        if [[ "$line" = *"</item>"* ]] ; then
             if ! grep -qs "^${title}::${link}::" "$news_history" ; then
-                echo "${title}::${link}::${category}" >> "$news_history"
+                # always write the conf? (will not require the manual Exit)
+                #echo "${title}::${link}::${category}" >> "$news_history"
                 el_array_member_add "${category}: ${title}!web-launcher '${link}'!star|" "${menu_news_entry_a[@]}" ; menu_news_entry_a=("${_out[@]}")
+                el_array_member_add "${title}::${link}::${category}" "${news_entries_a[@]}" ; news_entries_a=("${_out[@]}")
             fi
             #echo "$title"
             #echo "$link"
@@ -110,7 +122,7 @@ main(){
             unset title link category
         fi
 
-    done 3<<< "$( curl -L -s --user-agent "Mozilla/5.0" "$feed")"
+    done 3<<< "$( curl -L -s --user-agent "Mozilla/5.0" "$feed" )"
     #done 3<<< "$( cat "/tmp/feed.xml")" # test/debug
 
     menu_news="$( echo "${menu_news_entry_a[@]}" | sed -e 's;| ;|;g' )"
@@ -118,7 +130,13 @@ main(){
 
     #if yad --notification --command="ls" --menu="${menu_news_entry_a[@]}Exit!quit!cancel" --image=news-icon ; then
     if [[ -n "$menu_news" ]] ; then
-        yad --notification --command="web-launcher 'http://www.elivecd.org/news'" --menu="${menu_news}Exit!quit!cancel" --image=news-icon
+        if yad --notification --command="web-launcher 'http://www.elivecd.org/news'" --menu="${menu_news}Exit!quit!cancel" --image=news-icon ; then
+            # write the conf only if the user has clicked to Exit, otherwise will appear again in the next session
+            for line in "${news_entries_a[@]}"
+            do
+                echo "$line" >> "$news_history"
+            done
+        fi
     fi
 
 }
