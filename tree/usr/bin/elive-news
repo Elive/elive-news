@@ -40,7 +40,12 @@ echo "$$" > "$lockfile"
 
 main(){
     # pre {{{
-    local feed line title link category menu_news conf
+    local feed line title link category menu_news conf arg
+
+    # never run on live mode
+    if grep -qs "boot=live" /proc/cmdline ; then
+        exit
+    fi
 
     feed="http://feeds.feedburner.com/elivecd/IQfT"
     #feed="http://www.elivecd.org/news/feed/"
@@ -51,6 +56,21 @@ main(){
     #curl "$feed" > "/tmp/feed.xml" # tests/debug
 
     # }}}
+
+    for arg in "$@"
+    do
+        case "$arg" in
+            --delayed)
+                is_delayed=1
+                shift
+                ;;
+        esac
+    done
+
+    if ((is_delayed)) ; then
+        el_debug "delayed 20 seconds"
+        sleep 20
+    fi
 
     while read -ru 3 line
     do

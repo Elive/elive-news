@@ -2,7 +2,7 @@
 Name=Elive News
 Comment=Shows unobtrusively last Elive news
 Icon=logo-elive
-Exec=elive-news
+Exec=elive-news --delayed
 Terminal=false
 Type=Application
 NoDisplay=true
