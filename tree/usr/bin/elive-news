@@ -130,7 +130,7 @@ main(){
 
     #if yad --notification --command="ls" --menu="${menu_news_entry_a[@]}Exit!quit!cancel" --image=news-icon ; then
     if [[ -n "$menu_news" ]] ; then
-        if yad --notification --command="web-launcher 'http://www.elivecd.org/news'" --menu="${menu_news}Exit!quit!cancel" --image=news-icon ; then
+        if yad --notification --command="web-launcher 'http://www.elivecd.org/news'" --menu="${menu_news}Exit!quit!cancel" --image=text-x-news ; then
             # write the conf only if the user has clicked to Exit, otherwise will appear again in the next session
             for line in "${news_entries_a[@]}"
             do
