@@ -132,7 +132,7 @@ main(){
     if [[ -n "$menu_news" ]] ; then
         local message_exit message_check_news
         message_exit="$( printf "$( eval_gettext "Exit" )" "" )"
-        message_check_news="$( printf "$( eval_gettext "Check the news in your trayer corner. Right click on it to exit." )" "" )"
+        message_check_news="$( printf "$( eval_gettext "Check the news in your corner tray. Right click on it to exit." )" "" )"
 
         notify-send -t 24000 -i text-x-news "Elive News" "$message_check_news"
 
