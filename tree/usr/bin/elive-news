@@ -53,6 +53,7 @@ main(){
     news_history="$HOME/.cache/$(basename $0)/news-history.txt"
     if ! [[ -e "$news_history" ]] ; then
         mkdir -p "$( dirname "$news_history" )"
+        is_first_time=1
     fi
     #curl "$feed" > "/tmp/feed.xml" # tests/debug
 
@@ -136,12 +137,19 @@ main(){
 
         notify-send -t 24000 -i text-x-news "Elive News" "$message_check_news"
 
-        if yad --notification --command="web-launcher 'http://www.elivecd.org/news'" --menu="${menu_news}${message_exit}!quit!cancel" --image=text-x-news ; then
-            # write the conf only if the user has clicked to Exit, otherwise will appear again in the next session
+        if ((is_first_time)) ; then
             for line in "${news_entries_a[@]}"
             do
                 echo "$line" >> "$news_history"
             done
+        else
+            if yad --notification --command="web-launcher 'http://www.elivecd.org/news'" --menu="${menu_news}${message_exit}!quit!cancel" --image=text-x-news ; then
+                # write the conf only if the user has clicked to Exit, otherwise will appear again in the next session
+                for line in "${news_entries_a[@]}"
+                do
+                    echo "$line" >> "$news_history"
+                done
+            fi
         fi
     fi
 
