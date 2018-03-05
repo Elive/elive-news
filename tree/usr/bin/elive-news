@@ -135,8 +135,6 @@ main(){
         message_exit="$( printf "$( eval_gettext "Exit" )" "" )"
         message_check_news="$( printf "$( eval_gettext "Check the news in your corner tray. Right click on it to exit." )" "" )"
 
-        notify-send -t 24000 -i text-x-news "Elive News" "$message_check_news"
-
         if ((is_first_time)) ; then
             for line in "${news_entries_a[@]}"
             do
@@ -150,6 +148,9 @@ main(){
                     echo "$line" >> "$news_history"
                 done
             fi
+
+            # tell the user
+            notify-send -t 24000 -i text-x-news "Elive News" "$message_check_news"
         fi
     fi
 
