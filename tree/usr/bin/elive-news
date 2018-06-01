@@ -150,7 +150,7 @@ main(){
             fi
 
             # tell the user
-            notify-send -t 24000 -i text-x-news "Elive News" "$message_check_news"
+            notify-send -t 60000 -i text-x-news "Elive News" "$message_check_news"
         fi
     fi
 
