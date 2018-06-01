@@ -141,6 +141,9 @@ main(){
                 echo "$line" >> "$news_history"
             done
         else
+            # tell the user first
+            notify-send -t 50000 -i text-x-news "Elive News" "$message_check_news"
+
             if yad --notification --command="web-launcher 'http://www.elivecd.org/news'" --menu="${menu_news}${message_exit}!quit!cancel" --image=text-x-news ; then
                 # write the conf only if the user has clicked to Exit, otherwise will appear again in the next session
                 for line in "${news_entries_a[@]}"
@@ -149,8 +152,6 @@ main(){
                 done
             fi
 
-            # tell the user
-            notify-send -t 60000 -i text-x-news "Elive News" "$message_check_news"
         fi
     fi
 
