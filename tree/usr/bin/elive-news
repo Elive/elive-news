@@ -48,14 +48,14 @@ main(){
         exit
     fi
 
-    feed="http://feeds.feedburner.com/elivecd/IQfT"
-    #feed="http://www.elivecd.org/news/feed/"
+    feed="https://feeds.feedburner.com/elivecd/IQfT"
+    #feed="https://www.elivecd.org/news/feed/"
     news_history="$HOME/.cache/$(basename $0)/news-history.txt"
     if ! [[ -e "$news_history" ]] ; then
         mkdir -p "$( dirname "$news_history" )"
         is_first_time=1
     fi
-    #curl "$feed" > "/tmp/feed.xml" # tests/debug
+    #curl -L "$feed" > "/tmp/feed.xml" # tests/debug
 
     # do not run in the same user's session: update: not tested - no needed, if this is run only when destkop starts, which is more or less the same
     #if el_flag check "elive-news" ; then
@@ -144,7 +144,7 @@ main(){
             # tell the user first
             notify-send -t 50000 -i text-x-news "Elive News" "$message_check_news"
 
-            if yad --notification --command="web-launcher 'http://www.elivecd.org/news'" --menu="${menu_news}${message_exit}!quit!cancel" --image=text-x-news ; then
+            if yad --notification --command="web-launcher 'https://www.elivecd.org/news'" --menu="${menu_news}${message_exit}!quit!cancel" --image=text-x-news ; then
                 # write the conf only if the user has clicked to Exit, otherwise will appear again in the next session
                 for line in "${news_entries_a[@]}"
                 do
