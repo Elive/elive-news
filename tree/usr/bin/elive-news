@@ -134,7 +134,7 @@ main(){
     if [[ -n "$menu_news" ]] ; then
         local message_exit message_check_news
         message_exit="$( printf "$( eval_gettext "Exit" )" "" )"
-        message_check_news="$( printf "$( eval_gettext "Check the news in your corner tray. Right click on it to exit." )" "" )"
+        message_check_news="$( printf "$( eval_gettext "Check the news in your corner tray. Right click on it to exit. Thank you." )" "" )"
 
         if ((is_first_time)) ; then
             for line in "${news_entries_a[@]}"
