@@ -49,9 +49,15 @@ main(){
         exit
     fi
 
-    feed="https://feeds.feedburner.com/elivecd/IQfT"
-    #feed="https://www.elivecd.org/news/feed/"
-    news_history="$HOME/.cache/$(basename $0)/news-history.txt"
+    # this link is only for releases:
+    #feed="https://feeds.feedburner.com/elivecd/IQfT"
+    # this link includes all the updates in elive pages (releases, news, posts published, etc...)
+    feed="https://feeds.feedburner.com/EliveLinuxWebsiteUpdates"
+    #feed="https://www.elivecd.org/feed/"
+    #news_history="$HOME/.cache/$(basename $0)/news-history.txt"
+    # history's should be based in the news feed to catch, in order to avoid mixed states
+    news_history="$HOME/.cache/$(basename $0)/news-history--${feed//\//%}.txt"
+
     if ! [[ -e "$news_history" ]] ; then
         mkdir -p "$( dirname "$news_history" )"
         is_first_time=1
@@ -109,14 +115,24 @@ main(){
             line="${line%]]>*}"
             #el_debug "category: $category"
             category="$line $category"
+
+            # ignore some categories
+            if echo "$category" | grep -qsiE "(testimonials)" ; then
+                unset link title category
+                continue
+            fi
         fi
 
-        if [[ "$line" = *"</item>"* ]] ; then
-            if ! grep -qs "^${title}::${link}::" "$news_history" ; then
+        if [[ "$line" = *"</item>"* ]] && [[ -n "$title" ]] && [[ -n "$link" ]] ; then
+            #if ! LC_ALL=C grep -qs "^${title}::${link}::" "$news_history" ; then
+            if ! LC_ALL=C grep -qs "^${title}::${link}::" "$news_history" ; then
                 # always write the conf? (will not require the manual Exit)
                 #echo "${title}::${link}::${category}" >> "$news_history"
                 el_array_member_add "${category}: ${title}!web-launcher '${link}'!star|" "${menu_news_entry_a[@]}" ; menu_news_entry_a=("${_out[@]}")
                 el_array_member_add "${title}::${link}::${category}" "${news_entries_a[@]}" ; news_entries_a=("${_out[@]}")
+                el_debug "NEW $title"
+            else
+                el_debug "OLD $title"
             fi
             #echo "$title"
             #echo "$link"
@@ -143,7 +159,8 @@ main(){
             done
         else
             # tell the user first
-            notify-send -t 50000 -i text-x-news "Elive News" "$message_check_news"
+            #notify-send -t 50000 -i text-x-news "Elive News" "$message_check_news"
+            el_notify normal "text-x-news" "$( eval_gettext "Elive News" )" "$message_check_news"
 
             if yad --notification --command="web-launcher 'https://www.elivecd.org/news'" --menu="${menu_news}${message_exit}!quit!cancel" --image=text-x-news ; then
                 # write the conf only if the user has clicked to Exit, otherwise will appear again in the next session
