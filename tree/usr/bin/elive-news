@@ -149,8 +149,8 @@ main(){
     #if yad --notification --command="ls" --menu="${menu_news_entry_a[@]}Exit!quit!cancel" --image=news-icon ; then
     if [[ -n "$menu_news" ]] ; then
         local message_exit message_check_news
-        message_exit="$( printf "$( eval_gettext "Close" )" "" )"
-        message_check_news="$( printf "$( eval_gettext "Review the news in the corner gadget. Right click on it to exit." )" "" )"
+        message_exit="$( printf "$( eval_gettext "Close window" )" "" )"
+        message_check_news="$( printf "$( eval_gettext "Read the last news from Elive in the corner systray. Right click to exit." )" "" )"
 
         if ((is_first_time)) ; then
             for line in "${news_entries_a[@]}"
