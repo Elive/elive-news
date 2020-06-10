@@ -173,6 +173,13 @@ main(){
         fi
     fi
 
+    # XXX temporal betatesting for ELTRANS:
+    # this message is only for testing purposes of eltrans, remove it in the future after the eltrans tests has been done
+
+    local message_test
+    message_test="$( printf "$( eval_gettext "TEST MESSAGE: ignore this message, only used for eltrans betatesting" )" "" )"
+    #el_debug "$message_test"
+
 }
 
 #
