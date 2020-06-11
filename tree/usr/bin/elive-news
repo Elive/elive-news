@@ -160,7 +160,7 @@ main(){
         else
             # tell the user first
             #notify-send -t 50000 -i text-x-news "Elive News" "$message_check_news"
-            el_notify normal "text-x-news" "$( eval_gettext "News of Elive" )" "$message_check_news"
+            el_notify normal "text-x-news" "$( eval_gettext "Elive News" )" "$message_check_news"
 
             if yad --notification --command="web-launcher 'https://www.elivecd.org/news'" --menu="${menu_news}${message_exit}!quit!cancel" --image=text-x-news ; then
                 # write the conf only if the user has clicked to Exit, otherwise will appear again in the next session
