@@ -173,11 +173,6 @@ main(){
         fi
     fi
 
-    # this message is only for testing purposes of eltrans, remove it in the future after the eltrans tests has been done
-    local message_test
-    message_test="$( printf "$( eval_gettext "Please delete this message @Thanatermesis" )" "(test %s string)" )"
-    #el_debug "$message_test"
-
 }
 
 #
