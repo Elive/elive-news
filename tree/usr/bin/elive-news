@@ -42,7 +42,7 @@ echo "$$" > "$lockfile"
 
 main(){
     # pre {{{
-    local feed line title link category menu_news conf arg
+    local feed line title link category menu_news conf arg version_last_released_stable version_last_released_beta
 
     # never run on live mode
     if grep -qs "boot=live" /proc/cmdline ; then
@@ -87,6 +87,43 @@ main(){
         sleep 20
     fi
 
+
+    el_config_get
+
+    # show a simple popup about the last versions released:
+    # beta
+    version_last_released_beta="$( lynx -dump https://www.elivecd.org/download/beta/ | grep -iE "^Elive [[:digit:]]+\.[[:digit:]]+\.[[:digit:]]+ Beta$" | awk '{print $2}' )"
+    if [[ -n "$version_last_released_beta" ]] ; then
+        if [[ -n "$conf_version_last_released_beta" ]] ; then
+            if dpkg --compare-versions "$conf_version_last_released_beta" lt "$version_last_released_beta" ; then
+                el_notify normal text-x-news "$( eval_gettext "Elive Beta release" ) - ${version_last_released_beta}" "$( eval_gettext "A new version of Elive Beta has been published. Check the website to know more." )"
+                #el_notify normal software-update-available "$( eval_gettext "Elive Beta release" ) - ${version_last_released_beta}" "$( eval_gettext "A new version of Elive Beta has been released. Check the website to know more." )"
+            fi
+        fi
+        # remember the last version fetched
+        conf_version_last_released_beta="$version_last_released_beta"
+        el_config_save "conf_version_last_released_beta"
+    else
+        el_debug "unable to know the version of the last beta version of elive"
+    fi
+    # stable
+    version_last_released_stable="$( lynx -dump https://www.elivecd.org/download/stable/ | grep -iE "^Elive [[:digit:]]+\.[[:digit:]]+\.[[:digit:]]+ Stable$" | awk '{print $2}' )"
+    if [[ -n "$version_last_released_stable" ]] ; then
+        if [[ -n "$conf_version_last_released_stable" ]] ; then
+            if dpkg --compare-versions "$conf_version_last_released_stable" lt "$version_last_released_stable" ; then
+                #el_notify normal text-x-news "$( eval_gettext "Elive stable release" ) - ${version_last_released_stable}" "$( eval_gettext "A new version of Elive stable has been released. Check the website to know more." )"
+                el_notify normal software-update-available "$( eval_gettext "Elive Stable release" ) - ${version_last_released_stable}" "$( eval_gettext "A new version of Elive stable has been released. Check the website to know more." )"
+            fi
+        fi
+        # remember the last version fetched
+        conf_version_last_released_stable="$version_last_released_stable"
+        el_config_save "conf_version_last_released_stable"
+    else
+        el_debug "unable to know the version of the last stable version of elive"
+    fi
+
+
+    # show the last elive news
     while read -ru 3 line
     do
         # title:  <title>Elive 2.9.26 beta released</title>
