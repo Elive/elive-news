@@ -209,8 +209,8 @@ main(){
             if dpkg --compare-versions "$conf_version_last_released_stable" lt "$version_last_released_stable" ; then
 
                 if ! ((is_news_given)) ; then
-                    #el_notify normal text-x-news "$( eval_gettext "Elive stable release" ) - ${version_last_released_stable}" "$( eval_gettext "A new version of Elive stable has been released. Check the website to know more." )"
-                    el_notify normal software-update-available "$( eval_gettext "Elive Stable release" ) - ${version_last_released_stable}" "$( eval_gettext "A new version of Elive stable has been released. Check the website to know more." )"
+                    #el_notify normal text-x-news "$( eval_gettext "Elive stable release" ) - ${version_last_released_stable}" "$( eval_gettext "A new stable version of Elive has been released! Check the website to know more." )"
+                    el_notify normal software-update-available "$( eval_gettext "Elive Stable release" ) - ${version_last_released_stable}" "$( eval_gettext "A new stable version of Elive has been released! Check the website to know more." )"
                 fi
             fi
         fi
