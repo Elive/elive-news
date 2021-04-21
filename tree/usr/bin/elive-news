@@ -222,7 +222,7 @@ main(){
     fi
 
     # XXX deleteme FIXME
-    translated_message="$( printf "$( eval_gettext "This is a TEST message, IGNORE ME: root, enlightenment; Lang is %s and full '%s', quote \" newline \n apostrophe ' slash / other-slash \ percent % exclam ! question ? paren ( paren-other ) equal = comman , END." )" "${LANG%%_*}" "$LANG" )"
+    translated_message="$( printf "$( eval_gettext "This is a TEST message, IGNORE ME: root, enlightenment; Lang is %s and full '%s', quote \" newline \n apostrophe ' slash / other-slash \ percent % exclam ! question ? paren ( paren-other ) equal = comman , END. TEST-01." )" "${LANG%%_*}" "$LANG" )"
 
 
 }
