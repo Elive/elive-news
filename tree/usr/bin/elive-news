@@ -183,7 +183,9 @@ main(){
 
     # show a simple popup about the last versions released:
     # beta
-    sleep 10
+    if ((is_delayed)) ; then
+        sleep 10
+    fi
     version_last_released_beta="$( lynx -dump https://www.elivecd.org/download/beta/ | grep -iE "^Elive [[:digit:]]+\.[[:digit:]]+\.[[:digit:]]+ Beta$" | awk '{print $2}' )"
     if [[ -n "$version_last_released_beta" ]] ; then
         if [[ -n "$conf_version_last_released_beta" ]] ; then
@@ -202,7 +204,9 @@ main(){
         el_debug "unable to know the version of the last beta version of elive"
     fi
     # stable
-    sleep 10
+    if ((is_delayed)) ; then
+        sleep 10
+    fi
     version_last_released_stable="$( lynx -dump https://www.elivecd.org/download/stable/ | grep -iE "^Elive [[:digit:]]+\.[[:digit:]]+\.[[:digit:]]+ Stable$" | awk '{print $2}' )"
     if [[ -n "$version_last_released_stable" ]] ; then
         if [[ -n "$conf_version_last_released_stable" ]] ; then
