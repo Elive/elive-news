@@ -192,7 +192,7 @@ main(){
             if dpkg --compare-versions "$conf_version_last_released_beta" lt "$version_last_released_beta" ; then
 
                 if ! ((is_news_given)) ; then
-                    el_notify normal text-x-news "$( eval_gettext "Elive Beta release" ) - ${version_last_released_beta}" "$( eval_gettext "A new version of Elive Beta has been published. Check the website to know more." )"
+                    el_notify normal text-x-news "$( eval_gettext "Elive Beta release" ) - ${version_last_released_beta}" "$( eval_gettext "A new beta version of Elive has been published. Check the website to learn more." )"
                     #el_notify normal software-update-available "$( eval_gettext "Elive Beta release" ) - ${version_last_released_beta}" "$( eval_gettext "A new version of Elive Beta has been released. Check the website to know more." )"
                 fi
             fi
