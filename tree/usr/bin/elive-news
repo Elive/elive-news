@@ -40,9 +40,19 @@ echo "$$" > "$lockfile"
 
 # end lock system }}}
 
+convert_dehtml(){
+    local buf
+    buf="$( echo "$@" | perl -MHTML::Entities -pe 'decode_entities($_);' )"
+    if [[ -n "$buf" ]] ; then
+        echo "$buf"
+    else
+        echo "$@"
+    fi
+}
+
 main(){
     # pre {{{
-    local feed line title link category menu_news conf arg version_last_released_stable version_last_released_beta
+    local feed_elive_news feed_forum_annoucements line title link category menu_news conf arg version_last_released_stable version_last_released_beta
 
     # never run on live mode
     if grep -qs "boot=live" /proc/cmdline ; then
@@ -50,19 +60,20 @@ main(){
     fi
 
     # this link is only for releases:
-    #feed="https://feeds.feedburner.com/elivecd/IQfT"
     # this link includes all the updates in elive pages (releases, news, posts published, etc...)
-    feed="https://feeds.feedburner.com/EliveLinuxWebsiteUpdates"
-    #feed="https://www.elivecd.org/feed/"
-    #news_history="$HOME/.cache/$(basename $0)/news-history.txt"
+    #feed_elive_news="https://www.elivecd.org/feed/"
+    #feed_elive_news="https://feeds.feedburner.com/EliveLinuxWebsiteUpdates"
+    feed_elive_news="https://feeds.feedburner.com/elivecd/IQfT"
+    feed_forum_annoucements="https://forum.elivelinux.org/c/announcements/features/18.rss"
+    news_history="$HOME/.cache/$(basename $0)/news-history.txt"
     # history's should be based in the news feed to catch, in order to avoid mixed states
-    news_history="$HOME/.cache/$(basename $0)/news-history--${feed//\//%}.txt"
 
     if ! [[ -e "$news_history" ]] ; then
         mkdir -p "$( dirname "$news_history" )"
-        is_first_time=1
     fi
-    #curl -L "$feed" > "/tmp/feed.xml" # tests/debug
+    #curl -L "$feed_forum_annoucements" > "/tmp/feed_forum_annoucements.xml" # tests/debug
+    #curl -L "$feed_elive_news" > "/tmp/feed_elive_news.xml" # tests/debug
+    #exit
 
     # do not run in the same user's session: update: not tested - no needed, if this is run only when destkop starts, which is more or less the same
     #if el_flag check "elive-news" ; then
@@ -91,7 +102,10 @@ main(){
     el_config_get
 
 
+    #
     # show the last elive news
+    #
+    count=0
     while read -ru 3 line
     do
         # title:  <title>Elive 2.9.26 beta released</title>
@@ -103,6 +117,8 @@ main(){
                 continue
             fi
             #el_debug "title: $title"
+            line="$( convert_dehtml "$line" )"
+            line=${line//!/}
             title="$line"
         fi
 
@@ -115,11 +131,12 @@ main(){
         fi
 
         # category:  <category><![CDATA[Beta]]></category>
-        if [[ "$line" = *"<category>"*"CDATA"*"</category>"* ]] ; then
+        if [[ "$line" = *"<category>"*"</category>"* ]] ; then
             line="${line#*CDATA[}"
             line="${line%]]>*}"
+            line=${line//!/}
             #el_debug "category: $category"
-            category="$line $category"
+            category="$line"
 
             # ignore some categories
             if echo "$category" | grep -qsiE "(testimonials)" ; then
@@ -129,10 +146,8 @@ main(){
         fi
 
         if [[ "$line" = *"</item>"* ]] && [[ -n "$title" ]] && [[ -n "$link" ]] ; then
-            #if ! LC_ALL=C grep -qs "^${title}::${link}::" "$news_history" ; then
-            if ! LC_ALL=C grep -qs "^${title}::${link}::" "$news_history" ; then
+            if ! LC_ALL=C grep -Fqs "${title}::${link}::" "$news_history" ; then
                 # always write the conf? (will not require the manual Exit)
-                #echo "${title}::${link}::${category}" >> "$news_history"
                 el_array_member_add "${category}: ${title}!web-launcher '${link}'!star|" "${menu_news_entry_a[@]}" ; menu_news_entry_a=("${_out[@]}")
                 el_array_member_add "${title}::${link}::${category}" "${news_entries_a[@]}" ; news_entries_a=("${_out[@]}")
                 el_debug "NEW $title"
@@ -142,12 +157,100 @@ main(){
             #echo "$title"
             #echo "$link"
             #echo "$category"
+            count="$(( $count + 1 ))"
             unset title link category
         fi
 
-    done 3<<< "$( curl -L -s --user-agent "Mozilla/5.0" "$feed" )"
-    #done 3<<< "$( cat "/tmp/feed.xml")" # test/debug
+        # show max news
+        if [[ "$count" -ge 8 ]] ; then
+            break
+        fi
 
+    done 3<<< "$( curl -L -s --user-agent "Mozilla/5.0" "$feed_elive_news" )"
+    #done 3<<< "$( cat "/tmp/feed_elive_news.xml")" # test/debug
+
+    #
+    # show the last forum announcement
+    #
+    count=0
+    while read -ru 3 line
+    do
+        # title:  <title>Elive 2.9.26 beta released</title>
+        if [[ "$line" = *"<title>"*"</title>"* ]] ; then
+            line="${line#*<title>}"
+            line="${line%</title>*}"
+            # skip invalid ones
+            #if [[ "$line" = "News"*"Elive Linux" ]] ; then
+                #continue
+            #fi
+            line=${line//!/}
+            line="$( convert_dehtml "$line" )"
+            title="${line}"
+            #el_debug "  title: $title"
+        fi
+
+        #link:  <link>http://feedproxy.google.com/~r/elivecd/IQfT/~3/pUtohK1YFC8/</link>   # this will redirect and should be the correct link
+        if [[ "$line" = *"<link>http"*"</link>"* ]] ; then
+            line="http${line#*>http}"
+            line="${line%</link>*}"
+            link="${line}"
+            #el_debug "  link: $link"
+        fi
+
+        # category:  <category><![CDATA[Beta]]></category>
+        if [[ "$line" = *"<category>"*"</category>"* ]] ; then
+            line="${line#*<category>}"
+            line="${line%</category>*}"
+            line="${line#*CDATA[}"
+            line="${line%]]>*}"
+            line=${line//!/}
+            category="${line}"
+            #el_debug "  category: $category"
+
+            # ignore some categories
+            #if echo "$category" | grep -qsiE "(testimonials)" ; then
+                #unset link title category
+                #continue
+            #fi
+        fi
+
+        if [[ "$line" = *"</item>"* ]] && [[ -n "$title" ]] && [[ -n "$link" ]] ; then
+            #if ! LC_ALL=C grep -qs "^${title}::${link}::" "$news_history" ; then
+            if ! LC_ALL=C grep -Fqs "${title}::${link}::" "$news_history" ; then
+                # always write the conf? (will not require the manual Exit)
+                #echo "${title}::${link}::${category}" >> "$news_history"
+                case "$category" in
+                    "Features")       icon="gwget" ; ;;
+                    "Designs")        icon="preferences-desktop-theme" ; ;;
+                    #*)                icon="dialog-information" ; ;;
+                    *)                icon="config-users" ; ;;
+                esac
+                el_array_member_add "${category}: ${title}!web-launcher '${link}'!${icon}|" "${menu_news_entry_a[@]}" ; menu_news_entry_a=("${_out[@]}")
+                el_array_member_add "${title}::${link}::${category}" "${news_entries_a[@]}" ; news_entries_a=("${_out[@]}")
+                el_debug "NEW $title"
+            else
+                el_debug "OLD $title"
+            fi
+            #echo "$title"
+            #echo "$link"
+            #echo "$category"
+            count="$(( $count + 1 ))"
+            unset title link category
+        fi
+
+        # show max news
+        if [[ "$count" -ge 8 ]] ; then
+            break
+        fi
+
+    done 3<<< "$( curl -L -s --user-agent "Mozilla/5.0" "$feed_forum_annoucements" )"
+    #done 3<<< "$( cat "/tmp/feed_forum_annoucements.xml")" # test/debug
+
+
+
+    #
+    # generate menu of news
+    #
     menu_news="$( echo "${menu_news_entry_a[@]}" | sed -e 's;| ;|;g' )"
     read -r menu_news <<< "$menu_news"
 
@@ -157,7 +260,7 @@ main(){
         message_exit="$( printf "$( eval_gettext "Close window" )" "" )"
         message_check_news="$( printf "$( eval_gettext "Read the latest news from Elive in the corner systray. Right click to exit." )" "" )"
 
-        if ((is_first_time)) ; then
+        if ! [[ -s "$news_history" ]] ; then
             for line in "${news_entries_a[@]}"
             do
                 echo "$line" >> "$news_history"
@@ -167,7 +270,9 @@ main(){
             #notify-send -t 50000 -i text-x-news "Elive News" "$message_check_news"
             el_notify normal "text-x-news" "$( eval_gettext "Elive News" )" "$message_check_news"
 
-            if yad --notification --command="web-launcher 'https://www.elivecd.org/news'" --menu="${menu_news}${message_exit}!quit!cancel" --image=text-x-news ; then
+            el_debug "yad --notification --command=\"web-launcher 'https://forum.elivelinux.org/t/news-automated-showing-in-your-elive-system/3314'\" --menu=\"${menu_news}${message_exit}!quit!cancel\" --image=text-x-news"
+
+            if yad --notification --command="web-launcher 'https://forum.elivelinux.org/t/news-automated-showing-in-your-elive-system/3314'" --menu="${menu_news}${message_exit}!quit!cancel" --image=text-x-news ; then
                 # write the conf only if the user has clicked to Exit, otherwise will appear again in the next session
                 for line in "${news_entries_a[@]}"
                 do
