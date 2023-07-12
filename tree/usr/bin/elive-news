@@ -42,7 +42,7 @@ echo "$$" > "$lockfile"
 
 convert_dehtml(){
     local buf
-    buf="$( echo "$@" | perl -MHTML::Entities -pe 'decode_entities($_);' )"
+    buf="$( echo "$@" | perl -MHTML::Entities -pe 'decode_entities($_);' 2>/dev/null )"
     if [[ -n "$buf" ]] ; then
         echo "$buf"
     else
