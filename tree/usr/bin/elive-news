@@ -169,6 +169,9 @@ main(){
     done 3<<< "$( curl -L -s --user-agent "Mozilla/5.0" "$feed_elive_news" )"
     #done 3<<< "$( cat "/tmp/feed_elive_news.xml")" # test/debug
 
+
+
+
     #
     # show the last forum announcement
     #
@@ -286,6 +289,9 @@ main(){
     fi
 
 
+
+
+
     # show a simple popup about the last versions released:
     # beta
     if ((is_delayed)) ; then
@@ -329,6 +335,52 @@ main(){
     else
         el_debug "unable to know the version of the last stable version of elive"
     fi
+
+
+
+
+    #
+    # Show the Patreon donnors
+    #
+    patreon_curl="$( curl -m 20 -Ls --user-agent "Mozilla 5.0"  "https://www.patreon.com/elive/about" | grep -E "(patron_count|pledge_sum)" )"
+    patreon_currency="$( echo "$patreon_curl" | grep '"pledge_sum_currency":' | sed -e 's|^.*": ||g' -e 's|,$||g' -e 's|"||g' )"
+    read -r patreon_currency <<< "$patreon_currency"
+
+    if [[ "$patreon_currency" = "USD" ]] ; then
+        patreon_patrons="$( echo "$patreon_curl" | grep '"patron_count":' | sed -e 's|^.*": ||g' -e 's|,$||g' )"
+        read -r patreon_patrons <<< "$patreon_patrons"
+        patreon_pledge="$( echo "$patreon_curl" | grep '"pledge_sum":' | sed -e 's|^.*": ||g' -e 's|,$||g' )"
+        read -r patreon_pledge <<< "$patreon_pledge"
+        # remove the two last numbers (decimals)
+        patreon_pledge="${patreon_pledge::-2}"
+        if [[ -z "$patreon_pledge" ]] || [[ -z "$patreon_patrons" ]] ; then
+            el_error "wrong data obtained from patreon curl:\n$patreon_curl"
+        fi
+
+        local message_patreon_new_donnor_title
+        message_patreon_new_donnor_title="$( printf "$( eval_gettext "A new user has joined the Elive financial support!" )" "" )"
+        local message_patreon_new_donnor_body
+        message_patreon_new_donnor_body="$( printf "$( eval_gettext "Now there are %s people supporting Elive, making a total of %s USD in monthly support!" )" "$patreon_patrons" "$patreon_pledge" )"
+        local message_patreon_new_donnor_join
+        message_patreon_new_donnor_join="$( printf "$( eval_gettext "Join too" )" "" )"
+
+
+        if [[ "$patreon_patrons" != "$conf_patreon_patrons" ]] ; then
+            result="$( el_notify wait znes "$message_patreon_new_donnor_title" "$message_patreon_new_donnor_body"  --action=open="$message_patreon_new_donnor_join" )"
+            if [[ "$result" = "open" ]] ; then
+                web-launcher "https://www.elivecd.org/patreon"
+            fi
+        fi
+
+        # save to not ask again
+        conf_patreon_patrons="$patreon_patrons"
+        el_config_save "conf_patreon_patrons"
+    else
+        el_error "Patreon currency obtained value is not in USD ? '$patreon_currency', full:\n$patreon_curl"
+    fi
+
+
+
 
 
 }
