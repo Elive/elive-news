@@ -362,7 +362,7 @@ main(){
         local message_patreon_new_donnor_body
         message_patreon_new_donnor_body="$( printf "$( eval_gettext "Now there are %s people supporting Elive, making a total of %s USD in monthly support!" )" "$patreon_patrons" "$patreon_pledge" )"
         local message_patreon_new_donnor_footer
-        message_patreon_new_donnor_footer="$( printf "$( eval_gettext "Even if you cannot add much, a small sum will help this project to survive, otherwise it will cease to exist." )" "" )"
+        message_patreon_new_donnor_footer="$( printf "$( eval_gettext "Even if you cannot contribute much, a small sum will still play a crucial role in the survival of this project. Without your support, it will inevitably cease to exist." )" "" )"
         local message_patreon_new_donnor_join
         message_patreon_new_donnor_join="$( printf "$( eval_gettext "I want to join it too" )" "" )"
 
