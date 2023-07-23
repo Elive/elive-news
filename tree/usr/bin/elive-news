@@ -362,7 +362,7 @@ main(){
         local message_patreon_new_donnor_body
         message_patreon_new_donnor_body="$( printf "$( eval_gettext "Now there are %s people supporting Elive, making a total of %s USD in monthly support!" )" "$patreon_patrons" "$patreon_pledge" )"
         local message_patreon_new_donnor_join
-        message_patreon_new_donnor_join="$( printf "$( eval_gettext "Join too" )" "" )"
+        message_patreon_new_donnor_join="$( printf "$( eval_gettext "I want to join it too" )" "" )"
 
 
         if [[ "$patreon_patrons" != "$conf_patreon_patrons" ]] ; then
