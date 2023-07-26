@@ -346,7 +346,7 @@ main(){
     patreon_currency="$( echo "$patreon_curl" | grep '"pledge_sum_currency":' | sed -e 's|^.*": ||g' -e 's|,$||g' -e 's|"||g' )"
     read -r patreon_currency <<< "$patreon_currency"
 
-    if [[ "$patreon_currency" = "USD" ]] ; then
+    if [[ -n "$patreon_currency" ]] ; then
         patreon_patrons="$( echo "$patreon_curl" | grep '"patron_count":' | sed -e 's|^.*": ||g' -e 's|,$||g' )"
         read -r patreon_patrons <<< "$patreon_patrons"
         patreon_pledge="$( echo "$patreon_curl" | grep '"pledge_sum":' | sed -e 's|^.*": ||g' -e 's|,$||g' )"
@@ -360,7 +360,7 @@ main(){
         local message_patreon_new_donnor_title
         message_patreon_new_donnor_title="$( printf "$( eval_gettext "A new user has joined the Elive financial support!" )" "" )"
         local message_patreon_new_donnor_body
-        message_patreon_new_donnor_body="$( printf "$( eval_gettext "Now there are %s people supporting Elive, making a total of %s USD in monthly support!" )" "$patreon_patrons" "$patreon_pledge" )"
+        message_patreon_new_donnor_body="$( printf "$( eval_gettext "Now there are %s people supporting Elive, making a total of %s %s in monthly support!" )" "$patreon_patrons" "$patreon_pledge" "$patreon_currency" )"
         local message_patreon_new_donnor_footer
         message_patreon_new_donnor_footer="$( printf "$( eval_gettext "Even if you cannot contribute much, a small sum will still play a crucial role in the survival of this project. Without your support, it will inevitably cease to exist." )" "" )"
         local message_patreon_new_donnor_join
