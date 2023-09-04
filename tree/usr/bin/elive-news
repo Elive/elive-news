@@ -372,7 +372,7 @@ main(){
             message_patreon_new_donnor_join="$( printf "$( eval_gettext "I want to join it too" )" "" )"
 
 
-            if [[ "$patreon_patrons" != "$conf_patreon_patrons" ]] ; then
+            if [[ "$patreon_patrons" -gt "$conf_patreon_patrons" ]] ; then
                 result="$( el_notify wait znes "$message_patreon_new_donnor_title" "${message_patreon_new_donnor_body}\n\n${message_patreon_new_donnor_footer}"  --action=open="$message_patreon_new_donnor_join" )"
                 if [[ "$result" = "open" ]] ; then
                     web-launcher "https://www.elivecd.org/patreon"
