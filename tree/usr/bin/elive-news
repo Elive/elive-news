@@ -347,7 +347,7 @@ main(){
         sleep 2m
         patreon_curl="$( curl -m 20 -Ls --user-agent "Mozilla 5.0"  "https://www.patreon.com/elive/about" | grep -E "(patron_count|pledge_sum)" | tr '"' "'" | tr ',' '\n' )"
     fi
-    patreon_currency="$( echo "$patreon_curl" | grep "'pledge_sum_currency':" | sed -e "s|^.*': ||g" -e "s|,$||g" -e "s|'||g" )"
+    patreon_currency="$( echo "$patreon_curl" | grep "'pledge_sum_currency':" | sed -e "s|^.*':||g" -e "s|,$||g" -e "s|'||g" )"
     read -r patreon_currency <<< "$patreon_currency"
 
     if [[ -n "$patreon_curl" ]] ; then
