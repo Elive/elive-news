@@ -342,6 +342,9 @@ main(){
     #
     # Show the Patreon donnors
     #
+    local message_patreon_new_donnor_title message_patreon_new_donnor_body message_patreon_new_donnor_footer message_patreon_new_donnor_join
+    source /etc/elive/settings 2>/dev/null || true
+
     patreon_curl="$( curl -m 20 -Ls --user-agent "Mozilla 5.0"  "https://www.patreon.com/elive/about" | grep -E "(patron_count|pledge_sum)" | tr '"' "'" | tr ',' '\n' )"
     if [[ -z "$patreon_curl" ]] ; then
         sleep 2m
@@ -362,18 +365,26 @@ main(){
                 el_error "wrong data obtained from patreon curl:\n$patreon_curl"
             fi
 
-            local message_patreon_new_donnor_title
-            message_patreon_new_donnor_title="$( printf "$( eval_gettext "A new user has joined the Elive financial support!" )" "" )"
-            local message_patreon_new_donnor_body
-            message_patreon_new_donnor_body="$( printf "$( eval_gettext "There's %s people supporting Elive, this makes a total of %s %s of monthly support!" )" "$patreon_patrons" "$patreon_pledge" "$patreon_currency" )"
-            local message_patreon_new_donnor_footer
-            message_patreon_new_donnor_footer="$( printf "$( eval_gettext "Even if you cannot contribute much, a small sum will still play a crucial role in the survival of this project. Without your support, Elive may likely cease to exist." )" "" )"
-            local message_patreon_new_donnor_join
-            message_patreon_new_donnor_join="$( printf "$( eval_gettext "I want to join it too!" )" "" )"
+            if ((premium_user)) ; then
+                message_patreon_new_donnor_title="$( printf "$( eval_gettext "Another user joined Patreon!" )" "" )"
+                message_patreon_new_donnor_body="$( printf "$( eval_gettext "There's %s people supporting Elive, this makes a total of %s %s of monthly support!" )" "$patreon_patrons" "$patreon_pledge" "$patreon_currency" )"
+                message_patreon_new_donnor_footer="$( printf "$( eval_gettext "This is very good news! The more people that join the Patreon of Elive, the more Elive can progress!" )" "" )"
+                message_patreon_new_donnor_join="$( printf "$( eval_gettext "See them!" )" "" )"
+            else
+                message_patreon_new_donnor_title="$( printf "$( eval_gettext "A new user has joined the Elive financial support!" )" "" )"
+                message_patreon_new_donnor_body="$( printf "$( eval_gettext "There's %s people supporting Elive, this makes a total of %s %s of monthly support!" )" "$patreon_patrons" "$patreon_pledge" "$patreon_currency" )"
+                message_patreon_new_donnor_footer="$( printf "$( eval_gettext "Even if you cannot contribute much, a small sum will still play a crucial role in the survival of this project. Without your support, Elive may likely cease to exist." )" "" )"
+                message_patreon_new_donnor_join="$( printf "$( eval_gettext "I want to join it too!" )" "" )"
+            fi
 
 
             if [[ "$patreon_patrons" -gt "$conf_patreon_patrons" ]] ; then
-                result="$( el_notify wait znes "$message_patreon_new_donnor_title" "${message_patreon_new_donnor_body}\n\n${message_patreon_new_donnor_footer}"  --action=open="$message_patreon_new_donnor_join" )"
+                if ((premium_user)) ; then
+                    result="$( el_notify wait znes "$message_patreon_new_donnor_title" "${message_patreon_new_donnor_body}\n\n${message_patreon_new_donnor_footer}" )"
+                else
+                    result="$( el_notify wait znes "$message_patreon_new_donnor_title" "${message_patreon_new_donnor_body}\n\n${message_patreon_new_donnor_footer}"  --action=open="$message_patreon_new_donnor_join" )"
+                fi
+
                 if [[ "$result" = "open" ]] ; then
                     web-launcher "https://www.elivecd.org/patreon"
                 fi
