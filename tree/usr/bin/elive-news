@@ -365,11 +365,11 @@ main(){
             local message_patreon_new_donnor_title
             message_patreon_new_donnor_title="$( printf "$( eval_gettext "A new user has joined the Elive financial support!" )" "" )"
             local message_patreon_new_donnor_body
-            message_patreon_new_donnor_body="$( printf "$( eval_gettext "Now there are %s people supporting Elive, making a total of %s %s in monthly support!" )" "$patreon_patrons" "$patreon_pledge" "$patreon_currency" )"
+            message_patreon_new_donnor_body="$( printf "$( eval_gettext "There's %s people supporting Elive, this makes a total of %s %s of monthly support!" )" "$patreon_patrons" "$patreon_pledge" "$patreon_currency" )"
             local message_patreon_new_donnor_footer
-            message_patreon_new_donnor_footer="$( printf "$( eval_gettext "Even if you cannot contribute much, a small sum will still play a crucial role in the survival of this project. Without your support, it will inevitably cease to exist." )" "" )"
+            message_patreon_new_donnor_footer="$( printf "$( eval_gettext "Even if you cannot contribute much, a small sum will still play a crucial role in the survival of this project. Without your support, Elive may likely cease to exist." )" "" )"
             local message_patreon_new_donnor_join
-            message_patreon_new_donnor_join="$( printf "$( eval_gettext "I want to join it too" )" "" )"
+            message_patreon_new_donnor_join="$( printf "$( eval_gettext "I want to join it too!" )" "" )"
 
 
             if [[ "$patreon_patrons" -gt "$conf_patreon_patrons" ]] ; then
