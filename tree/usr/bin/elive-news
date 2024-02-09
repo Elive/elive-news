@@ -7,7 +7,7 @@ el_make_environment
 TEXTDOMAIN="elive-news"
 export TEXTDOMAIN
 
-# Lock system (good one) {{{
+# Lock system {{{
 lockfile="/tmp/.$(basename $0)-${USER}.lock"
 #set -x
 
@@ -25,9 +25,8 @@ else
 fi
 if (ps up $PROCCESS) 1>/dev/null 2>&1 ; then
     # el_error "$(basename $0) already running"
-    exit
-else
-    echo $$ > "$lockfile"
+    # exit
+    kill $PROCCESS
 fi
 
 # traps needs to be after the lock verification, in order to not remove it when we are already running
@@ -401,6 +400,7 @@ main(){
 
 
 
+    exit_ok
 
 }
 
