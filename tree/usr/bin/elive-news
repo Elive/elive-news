@@ -18,6 +18,11 @@ exit_error(){
     rm -f "$lockfile"
 }
 
+if ps ux | grep -v grep | grep -qs "yad.*notification.*-x-news" ; then
+    el_debug "$SOURCE using yad widget already running, exiting..."
+    exit
+fi
+
 if [[ -r "$lockfile" ]] ; then
     PROCCESS="$(cat $lockfile)"
 else
@@ -274,6 +279,7 @@ main(){
 
             el_debug "yad --notification --command=\"web-launcher 'https://forum.elivelinux.org/t/news-automated-showing-in-your-elive-system/3314'\" --menu=\"${menu_news}${message_exit}!quit!cancel\" --image=text-x-news"
 
+            # NOTE: do not change the icon image unless you change it in the checker too (search in the rest of the code for the same name)
             if yad --notification --command="web-launcher 'https://forum.elivelinux.org/t/news-automated-showing-in-your-elive-system/3314'" --menu="${menu_news}${message_exit}!quit!cancel" --image=text-x-news ; then
                 # write the conf only if the user has clicked to Exit, otherwise will appear again in the next session
                 for line in "${news_entries_a[@]}"
