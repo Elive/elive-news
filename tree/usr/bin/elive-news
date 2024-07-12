@@ -265,7 +265,7 @@ main(){
     if [[ -n "$menu_news" ]] ; then
         local message_exit message_check_news
         message_exit="$( printf "$( eval_gettext "Close window" )" "" )"
-        message_check_news="$( printf "$( eval_gettext "Read the latest news from Elive in the corner systray. Right click to exit." )" "" )"
+        message_check_news="$( printf "$( eval_gettext "Stay updated with Elive news in the systray. Right-click to close." )" "" )"
 
         if ! [[ -s "$news_history" ]] ; then
             for line in "${news_entries_a[@]}"
@@ -308,7 +308,7 @@ main(){
             if dpkg --compare-versions "$conf_version_last_released_beta" lt "$version_last_released_beta" ; then
 
                 if ! ((is_news_given)) ; then
-                    el_notify normal text-x-news "$( eval_gettext "Elive Beta release" ) - ${version_last_released_beta}" "$( eval_gettext "A new beta version of Elive has been published. Check the website to learn more." )"
+                    el_notify normal text-x-news "$( eval_gettext "Elive Beta release" ) - ${version_last_released_beta}" "$( eval_gettext "A new beta version of Elive has been published. Visit the website for more information." )"
                     #el_notify normal software-update-available "$( eval_gettext "Elive Beta release" ) - ${version_last_released_beta}" "$( eval_gettext "A new version of Elive Beta has been released. Check the website to know more." )"
                 fi
             fi
@@ -329,8 +329,8 @@ main(){
             if dpkg --compare-versions "$conf_version_last_released_stable" lt "$version_last_released_stable" ; then
 
                 if ! ((is_news_given)) ; then
-                    #el_notify normal text-x-news "$( eval_gettext "Elive stable release" ) - ${version_last_released_stable}" "$( eval_gettext "A new stable version of Elive has been released! Check the website to find out more." )"
-                    el_notify normal software-update-available "$( eval_gettext "Elive Stable release" ) - ${version_last_released_stable}" "$( eval_gettext "A new stable version of Elive has been released! Check the website to find out more." )"
+                    #el_notify normal text-x-news "$( eval_gettext "Elive stable release" ) - ${version_last_released_stable}" "$( eval_gettext "A new stable version of Elive has been released! Visit the website to learn more." )"
+                    el_notify normal software-update-available "$( eval_gettext "Elive Stable release" ) - ${version_last_released_stable}" "$( eval_gettext "A new stable version of Elive has been released! Visit the website to learn more." )"
                 fi
             fi
         fi
@@ -372,14 +372,14 @@ main(){
 
             if ((is_premium_user)) ; then
                 message_patreon_new_donnor_title="$( printf "$( eval_gettext "Another user joined Patreon!" )" "" )"
-                message_patreon_new_donnor_body="$( printf "$( eval_gettext "There's %s people supporting Elive, this makes a total of %s %s of monthly support!" )" "$patreon_patrons" "$patreon_pledge" "$patreon_currency" )"
-                message_patreon_new_donnor_footer="$( printf "$( eval_gettext "This is very good news! The more people that join the Patreon of Elive, the more Elive can progress!" )" "" )"
-                message_patreon_new_donnor_join="$( printf "$( eval_gettext "See them!" )" "" )"
+                message_patreon_new_donnor_body="$( printf "$( eval_gettext "With %s supporters, Elive receives a total of %s %s in monthly support!" )" "$patreon_patrons" "$patreon_pledge" "$patreon_currency" )"
+                message_patreon_new_donnor_footer="$( printf "$( eval_gettext "Great news! More Patreon supporters mean Elive can progress faster!" )" "" )"
+                message_patreon_new_donnor_join="$( printf "$( eval_gettext "Check them out!" )" "" )"
             else
                 message_patreon_new_donnor_title="$( printf "$( eval_gettext "A new user has joined the Elive financial support!" )" "" )"
-                message_patreon_new_donnor_body="$( printf "$( eval_gettext "There's %s people supporting Elive, this makes a total of %s %s of monthly support!" )" "$patreon_patrons" "$patreon_pledge" "$patreon_currency" )"
-                message_patreon_new_donnor_footer="$( printf "$( eval_gettext "Even if you cannot contribute much, a small sum will still play a crucial role in the survival of this project. Without your support, Elive may likely cease to exist." )" "" )"
-                message_patreon_new_donnor_join="$( printf "$( eval_gettext "I want to join it too!" )" "" )"
+                message_patreon_new_donnor_body="$( printf "$( eval_gettext "With %s supporters, Elive receives a total of %s %s in monthly support!" )" "$patreon_patrons" "$patreon_pledge" "$patreon_currency" )"
+                message_patreon_new_donnor_footer="$( printf "$( eval_gettext "Even if you can't contribute much, a small sum is crucial for this project's survival. Without your support, Elive might not continue." )" "" )"
+                message_patreon_new_donnor_join="$( printf "$( eval_gettext "I want to join as well!" )" "" )"
             fi
 
 
