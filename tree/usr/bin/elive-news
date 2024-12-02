@@ -378,7 +378,7 @@ main(){
             else
                 message_patreon_new_donnor_title="$( printf "$( eval_gettext "A new user has joined the Elive financial support!" )" "" )"
                 message_patreon_new_donnor_body="$( printf "$( eval_gettext "With %s supporters, Elive receives a total of %s %s in monthly support!" )" "$patreon_patrons" "$patreon_pledge" "$patreon_currency" )"
-                message_patreon_new_donnor_footer="$( printf "$( eval_gettext "Even if you can't contribute much, a small sum is crucial for this project's survival. Without your support, Elive might not continue." )" "" )"
+                message_patreon_new_donnor_footer="$( printf "$( eval_gettext "Even if you can't contribute much, a small sum is crucial for this project's survival. With your support, Elive can continue to exist." )" "" )"
                 message_patreon_new_donnor_join="$( printf "$( eval_gettext "I want to join as well!" )" "" )"
             fi
 
