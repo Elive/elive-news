@@ -68,7 +68,8 @@ main(){
     #feed_elive_news="https://www.elivecd.org/feed/"
     #feed_elive_news="https://feeds.feedburner.com/EliveLinuxWebsiteUpdates"
     feed_elive_news="https://feeds.feedburner.com/elivecd/IQfT"
-    feed_forum_annoucements="https://forum.elivelinux.org/c/announcements/features/18.rss"
+    # feed_forum_annoucements="https://forum.elivelinux.org/c/announcements/features/18.rss"
+    feed_forum_annoucements="https://forum.elivelinux.org/c/announcements/43.rss"
     news_history="$HOME/.cache/$(basename $0)/news-history.txt"
     # history's should be based in the news feed to catch, in order to avoid mixed states
 
@@ -187,9 +188,9 @@ main(){
             line="${line#*<title>}"
             line="${line%</title>*}"
             # skip invalid ones
-            #if [[ "$line" = "News"*"Elive Linux" ]] ; then
-                #continue
-            #fi
+            if [[ "$line" = "Elive"*"released" ]] ; then
+                continue
+            fi
             line=${line//!/}
             line="$( convert_dehtml "$line" )"
             title="${line}"
