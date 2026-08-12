@@ -368,7 +368,7 @@ main(){
             # remove the two last numbers (decimals)
             patreon_pledge="${patreon_pledge::-2}"
             if [[ -z "$patreon_pledge" ]] || [[ -z "$patreon_patrons" ]] ; then
-                el_error "wrong data obtained from patreon curl:\n$patreon_curl"
+                el_error "wrong data obtained from patreon curl: $patreon_pledge - $patreon_patrons - $patreon_currency"
             fi
 
             if ((is_premium_user)) ; then
@@ -400,7 +400,7 @@ main(){
             conf_patreon_patrons="$patreon_patrons"
             el_config_save "conf_patreon_patrons"
         else
-            el_error "Patreon currency obtained value is not in USD ? '$patreon_currency', full:\n$patreon_curl"
+            el_error "Patreon currency obtained value is not in USD ? '$patreon_currency', $patreon_pledge - $patreon_patrons"
         fi
     fi
 
