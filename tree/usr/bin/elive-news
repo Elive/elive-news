@@ -54,6 +54,116 @@ convert_dehtml(){
     fi
 }
 
+process_security_markers(){
+    local updated_marker="/var/run/elive-security/updated"
+    local unpatched_marker="/var/run/elive-security/unpatched"
+    local shown_any=0
+
+    el_debug "Checking security markers in /var/run/elive-security (DISPLAY='${DISPLAY:-}', test=${is_test:-0})"
+
+    # Wait for a graphical session before consuming/clearing markers
+    if [[ -z "${DISPLAY:-}" ]] && ! ((is_test)) ; then
+        el_debug "No DISPLAY set, deferring security markers for graphical session"
+        return 0
+    fi
+
+    if [[ -s "$updated_marker" ]] ; then
+        el_debug "Found updated marker: $updated_marker"
+        local marker_ts marker_path marker_sig pkg_lines="" pkg_count=0
+        marker_ts="$(grep '^TIMESTAMP=' "$updated_marker" | head -1 | cut -d'=' -f2-)"
+        marker_path="$(grep '^PATH=' "$updated_marker" | head -1 | cut -d'=' -f2-)"
+        marker_sig="security-updated::${marker_ts}::$(grep '^PKG|' "$updated_marker" | tr '\n' ';')"
+
+        if ! LC_ALL=C grep -Fqs "$marker_sig" "$news_history" ; then
+            local _r pkg old_v new_v
+            while IFS='|' read -r _r pkg old_v new_v ; do
+                [[ -z "$pkg" ]] && continue
+                pkg_lines="${pkg_lines}${pkg}: ${old_v} -> ${new_v}\n"
+                ((pkg_count++))
+            done < <(grep '^PKG|' "$updated_marker")
+
+            if [[ "$pkg_count" -gt 0 ]] ; then
+                local title body
+                title="$( eval_gettext "Security Updates Applied" )"
+                if [[ "$marker_path" = "full-upgrade" ]] ; then
+                    body="$( printf "$( eval_gettext "Updated packages (full-upgrade):\n%s" )" "$(echo -e "$pkg_lines")" )"
+                else
+                    body="$( printf "$( eval_gettext "Updated packages:\n%s" )" "$(echo -e "$pkg_lines")" )"
+                fi
+                el_debug "Security update notice (${pkg_count} pkg(s), path=${marker_path}): ${title}"
+                if ((is_test)) ; then
+                    echo -e "[TEST] Notification: ${title}\n${body}"
+                else
+                    el_notify normal "security-high" "$title" "$body"
+                    printf '%s\n' "$marker_sig" >> "$news_history"
+                fi
+                shown_any=1
+            fi
+        else
+            el_debug "Updated marker already recorded in $news_history"
+        fi
+    fi
+
+    if [[ -s "$unpatched_marker" ]] ; then
+        el_debug "Found unpatched CVE marker: $unpatched_marker"
+        local status src_pkg bins cve urgency desc cve_sig title body
+        while IFS='|' read -r status src_pkg bins cve urgency desc ; do
+            [[ -z "$status" ]] && continue
+            cve_sig="security-cve::${status}::${src_pkg}::${cve}"
+            if LC_ALL=C grep -Fqs "$cve_sig" "$news_history" ; then
+                el_debug "CVE notice already in history: $cve_sig"
+                continue
+            fi
+
+            local display_pkg="${bins:-$src_pkg}"
+            if [[ "$status" = "OPEN" ]] ; then
+                title="$( printf "$( eval_gettext "Security Warning: %s (%s)" )" "$display_pkg" "$cve" )"
+                body="$( printf "$( eval_gettext "An installed package has an unpatched security issue (%s). Avoid using it until a fix is available.\n%s" )" "$urgency" "$desc" )"
+                el_debug "Showing OPEN CVE warning: $cve_sig"
+                if ((is_test)) ; then
+                    echo -e "[TEST] Notification: ${title}\n${body}"
+                else
+                    el_notify imp "dialog-warning" "$title" "$body"
+                    # Remove old RESOLVED entry from history so reopened CVEs can resolve-notify again
+                    if [[ -f "$news_history" ]] ; then
+                        grep -vxF "security-cve::RESOLVED::${src_pkg}::${cve}" "$news_history" > "${news_history}.tmp.$$" 2>/dev/null && \
+                            mv -f "${news_history}.tmp.$$" "$news_history" || rm -f "${news_history}.tmp.$$"
+                    fi
+                    printf '%s\n' "$cve_sig" >> "$news_history"
+                fi
+                shown_any=1
+            elif [[ "$status" = "RESOLVED" ]] ; then
+                title="$( printf "$( eval_gettext "Security Issue Resolved: %s (%s)" )" "$display_pkg" "$cve" )"
+                body="$( eval_gettext "The previously reported security vulnerability is now resolved. You can safely use this package again." )"
+                el_debug "Showing RESOLVED CVE notice: $cve_sig"
+                if ((is_test)) ; then
+                    echo -e "[TEST] Notification: ${title}\n${body}"
+                else
+                    el_notify normal "security-high" "$title" "$body"
+                    # Remove old OPEN entry from history so a future regression can notify again
+                    if [[ -f "$news_history" ]] ; then
+                        grep -vxF "security-cve::OPEN::${src_pkg}::${cve}" "$news_history" > "${news_history}.tmp.$$" 2>/dev/null && \
+                            mv -f "${news_history}.tmp.$$" "$news_history" || rm -f "${news_history}.tmp.$$"
+                    fi
+                    printf '%s\n' "$cve_sig" >> "$news_history"
+                fi
+                shown_any=1
+            fi
+        done < <(grep -E '^(OPEN|RESOLVED)\|' "$unpatched_marker")
+    fi
+
+    if ((is_test)) ; then
+        el_debug "Test mode: leaving security markers untouched"
+        return 0
+    fi
+
+    if ((shown_any)) || [[ -e "$updated_marker" ]] || [[ -e "$unpatched_marker" ]] ; then
+        el_debug "Clearing consumed security markers"
+        sudo -n elive-upgrader-root --clear-security-markers 2>/dev/null || \
+            rm -f "$updated_marker" "$unpatched_marker" 2>/dev/null || true
+    fi
+}
+
 main(){
     # pre {{{
     local feed_elive_news feed_forum_annoucements line title link category menu_news conf arg version_last_released_stable version_last_released_beta
@@ -88,12 +198,21 @@ main(){
 
     # }}}
 
+    local is_test=0
     for arg in "$@"
     do
         case "$arg" in
             --delayed)
                 is_delayed=1
-                shift
+                ;;
+            --debug|-d)
+                export EL_DEBUG=4
+                is_print_fancy=1
+                ;;
+            --test|--dry-run)
+                is_test=1
+                export EL_DEBUG="${EL_DEBUG:-3}"
+                is_print_fancy=1
                 ;;
         esac
     done
@@ -105,7 +224,22 @@ main(){
 
 
     el_config_get
+    el_debug "elive-news starting: delayed=${is_delayed:-0}, test=${is_test}, history=${news_history}"
 
+    # Preserve first-run RSS behavior before process_security_markers writes to $news_history
+    local has_rss_history=0
+    if [[ -s "$news_history" ]] && LC_ALL=C grep -qv '^security-' "$news_history" ; then
+        has_rss_history=1
+    fi
+
+    # Consume pending security update / unpatched CVE markers before RSS & first-run checks
+    process_security_markers
+
+    if ((is_test)) ; then
+        el_debug "Test mode: exiting after security marker simulation"
+        exit_ok
+        exit 0
+    fi
 
     #
     # show the last elive news
@@ -268,7 +402,7 @@ main(){
         message_exit="$( printf "$( eval_gettext "Close window" )" "" )"
         message_check_news="$( printf "$( eval_gettext "Stay updated with Elive news in the systray. Right-click to close." )" "" )"
 
-        if ! [[ -s "$news_history" ]] ; then
+        if ! ((has_rss_history)) ; then
             for line in "${news_entries_a[@]}"
             do
                 echo "$line" >> "$news_history"
