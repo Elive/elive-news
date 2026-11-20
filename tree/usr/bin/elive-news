@@ -79,7 +79,7 @@ process_security_markers(){
                 if ((is_test)) ; then
                     echo -e "[TEST] Notification: ${title}\n${body}"
                 else
-                    el_notify normal "security-high" "$title" "$body"
+                    el_notify imp "security-high" "$title" "$body"
                     printf '%s\n' "$marker_sig" >> "$news_history"
                 fi
                 shown_any=1
@@ -108,7 +108,7 @@ process_security_markers(){
                 if ((is_test)) ; then
                     echo -e "[TEST] Notification: ${title}\n${body}"
                 else
-                    el_notify imp "dialog-warning" "$title" "$body"
+                    el_notify crit "dialog-warning" "$title" "$body"
                     # Remove old RESOLVED entry from history so reopened CVEs can resolve-notify again
                     if [[ -f "$news_history" ]] ; then
                         grep -vxF "security-cve::RESOLVED::${src_pkg}::${cve}" "$news_history" > "${news_history}.tmp.$$" 2>/dev/null && \
@@ -124,7 +124,7 @@ process_security_markers(){
                 if ((is_test)) ; then
                     echo -e "[TEST] Notification: ${title}\n${body}"
                 else
-                    el_notify normal "security-high" "$title" "$body"
+                    el_notify imp "security-high" "$title" "$body"
                     # Remove old OPEN entry from history so a future regression can notify again
                     if [[ -f "$news_history" ]] ; then
                         grep -vxF "security-cve::OPEN::${src_pkg}::${cve}" "$news_history" > "${news_history}.tmp.$$" 2>/dev/null && \
