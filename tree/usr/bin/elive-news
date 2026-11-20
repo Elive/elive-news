@@ -63,7 +63,7 @@ process_security_markers(){
             local _r pkg old_v new_v
             while IFS='|' read -r _r pkg old_v new_v ; do
                 [[ -z "$pkg" ]] && continue
-                pkg_lines="${pkg_lines}${pkg}: ${old_v} -> ${new_v}\n"
+                pkg_lines="${pkg_lines:+${pkg_lines}\n}${pkg} ${old_v} -> ${new_v}"
                 ((pkg_count++))
             done < <(grep '^PKG|' "$updated_marker")
 
@@ -71,10 +71,11 @@ process_security_markers(){
                 local title body
                 title="$( eval_gettext "Security Updates Applied" )"
                 if [[ "$marker_path" = "full-upgrade" ]] ; then
-                    body="$( printf "$( eval_gettext "Updated packages (full-upgrade):\n%s" )" "$(echo -e "$pkg_lines")" )"
+                    body="$( printf "$( eval_gettext "Updated packages (full-upgrade):\n%s" )" "$pkg_lines" )"
                 else
-                    body="$( printf "$( eval_gettext "Updated packages:\n%s" )" "$(echo -e "$pkg_lines")" )"
+                    body="$( printf "$( eval_gettext "Updated packages:\n%s" )" "$pkg_lines" )"
                 fi
+                body="${body//$'\n'/\\n}"
                 el_debug "Security update notice (${pkg_count} pkg(s), path=${marker_path}): ${title}"
                 if ((is_test)) ; then
                     echo -e "[TEST] Notification: ${title}\n${body}"
@@ -104,6 +105,7 @@ process_security_markers(){
             if [[ "$status" = "OPEN" ]] ; then
                 title="$( printf "$( eval_gettext "Security Warning: %s (%s)" )" "$display_pkg" "$cve" )"
                 body="$( printf "$( eval_gettext "An installed package has an unpatched security issue (%s). Avoid using it until a fix is available.\n%s" )" "$urgency" "$desc" )"
+                body="${body//$'\n'/\\n}"
                 el_debug "Showing OPEN CVE warning: $cve_sig"
                 if ((is_test)) ; then
                     echo -e "[TEST] Notification: ${title}\n${body}"
