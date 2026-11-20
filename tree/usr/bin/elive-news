@@ -7,42 +7,22 @@ el_make_environment
 TEXTDOMAIN="elive-news"
 export TEXTDOMAIN
 
-# Lock system {{{
-lockfile="/tmp/.$(basename $0)-${USER}.lock"
-#set -x
+# Quick security-only mode (for user crontab, every 10 min):
+#   elive-cron-gui-run elive-news --security-only
+#   Processes /var/run/elive-security/{updated,unpatched} without yad/RSS/Patreon.
 
-exit_ok(){
-    rm -f "$lockfile"
+show_help(){
+    cat <<EOF
+Usage: $(basename "$0") [OPTIONS]
+
+Options:
+  -n, --security-only   Process pending security markers and exit (no yad, no RSS, no network)
+  -t, --test, --dry-run Simulate: process markers without showing notifications or clearing them
+  --delayed             Delay startup (used at desktop autostart)
+  -d, --debug           Verbose debug output
+  -h, --help            Show this help message
+EOF
 }
-exit_error(){
-    rm -f "$lockfile"
-}
-
-if ps ux | grep -v grep | grep -qs "yad.*notification.*-x-news" ; then
-    el_debug "$SOURCE using yad widget already running, exiting..."
-    exit
-fi
-
-if [[ -r "$lockfile" ]] ; then
-    PROCCESS="$(cat $lockfile)"
-else
-    PROCCESS=" "
-fi
-if (ps up $PROCCESS) 1>/dev/null 2>&1 ; then
-    # el_error "$(basename $0) already running"
-    # exit
-    kill $PROCCESS
-fi
-
-# traps needs to be after the lock verification, in order to not remove it when we are already running
-trap "exit_ok" EXIT
-trap "exit_error" 1 3 5 6 14 ERR
-
-# SET the lock file
-echo "$$" > "$lockfile"
-
-
-# end lock system }}}
 
 convert_dehtml(){
     local buf
@@ -58,6 +38,11 @@ process_security_markers(){
     local updated_marker="/var/run/elive-security/updated"
     local unpatched_marker="/var/run/elive-security/unpatched"
     local shown_any=0
+
+    if ((is_security_only)) && ! [[ -s "/var/run/elive-security/updated" ]] \
+                             && ! [[ -s "/var/run/elive-security/unpatched" ]] ; then
+        return 0
+    fi
 
     el_debug "Checking security markers in /var/run/elive-security (DISPLAY='${DISPLAY:-}', test=${is_test:-0})"
 
@@ -159,10 +144,78 @@ process_security_markers(){
 
     if ((shown_any)) || [[ -e "$updated_marker" ]] || [[ -e "$unpatched_marker" ]] ; then
         el_debug "Clearing consumed security markers"
-        sudo -n elive-upgrader-root --clear-security-markers 2>/dev/null || \
-            rm -f "$updated_marker" "$unpatched_marker" 2>/dev/null || true
+        if ! sudo -n elive-upgrader-root --clear-security-markers 2>/dev/null ; then
+            if ! rm -f "$updated_marker" "$unpatched_marker" 2>/dev/null ; then
+                echo "$(basename $0): cannot clear security markers (no sudo, no write access)" >&2
+            fi
+        fi
     fi
 }
+
+is_security_only=0
+is_delayed=0
+is_test=0
+for arg in "$@" ; do
+    case "$arg" in
+        -n|--security-only)  is_security_only=1 ;;
+        --delayed)           is_delayed=1 ;;
+        --debug|-d)          export EL_DEBUG=4 ; is_print_fancy=1 ;;
+        -t|--test|--dry-run) is_test=1 ; export EL_DEBUG="${EL_DEBUG:-3}" ; is_print_fancy=1 ;;
+        -h|--help)           show_help ; exit 0 ;;
+        *) echo "Unknown argument: $arg" >&2 ; exit 1 ;;
+    esac
+done
+
+if ((is_security_only)) ; then
+    # never run on live mode
+    if grep -qs "boot=live" /proc/cmdline ; then
+        exit 0
+    fi
+    news_history="$HOME/.cache/$(basename $0)/news-history.txt"
+    if ! [[ -e "$news_history" ]] ; then
+        mkdir -p "$( dirname "$news_history" )"
+    fi
+    el_config_get
+    process_security_markers
+    exit 0
+fi
+
+# Lock system {{{
+lockfile="/tmp/.$(basename $0)-${USER}.lock"
+#set -x
+
+exit_ok(){
+    rm -f "$lockfile"
+}
+exit_error(){
+    rm -f "$lockfile"
+}
+
+if ps ux | grep -v grep | grep -qs "yad.*notification.*-x-news" ; then
+    el_debug "$SOURCE using yad widget already running, exiting..."
+    exit
+fi
+
+if [[ -r "$lockfile" ]] ; then
+    PROCCESS="$(cat $lockfile)"
+else
+    PROCCESS=" "
+fi
+if (ps up $PROCCESS) 1>/dev/null 2>&1 ; then
+    # el_error "$(basename $0) already running"
+    # exit
+    kill $PROCCESS
+fi
+
+# traps needs to be after the lock verification, in order to not remove it when we are already running
+trap "exit_ok" EXIT
+trap "exit_error" 1 3 5 6 14 ERR
+
+# SET the lock file
+echo "$$" > "$lockfile"
+
+
+# end lock system }}}
 
 main(){
     # pre {{{
@@ -197,25 +250,6 @@ main(){
     #el_flag add "elive-news"
 
     # }}}
-
-    local is_test=0
-    for arg in "$@"
-    do
-        case "$arg" in
-            --delayed)
-                is_delayed=1
-                ;;
-            --debug|-d)
-                export EL_DEBUG=4
-                is_print_fancy=1
-                ;;
-            --test|--dry-run)
-                is_test=1
-                export EL_DEBUG="${EL_DEBUG:-3}"
-                is_print_fancy=1
-                ;;
-        esac
-    done
 
     if ((is_delayed)) ; then
         el_debug "delayed 20 seconds"
